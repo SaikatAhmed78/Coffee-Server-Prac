@@ -25,29 +25,61 @@ async function run() {
 
       const coffeeCollectionPrac = client.db('coffeePracticeDB').collection('coffeePrac')
 
-    app.post('/coffee', async(req, res) => {
-        const allCoffee = req.body
-        console.log(allCoffee)
+      // POST route to add new coffee
+      app.post('/coffee', async(req, res) => {
+          const allCoffee = req.body;
+          console.log(allCoffee);
 
-        const result = await coffeeCollectionPrac.insertOne(allCoffee);
-        res.send(result)
-    });
+          const result = await coffeeCollectionPrac.insertOne(allCoffee);
+          res.send(result);
+      });
 
-    app.get('/coffee', async(req, res) => {
-        const cursor = coffeeCollectionPrac.find();
-        const result = await cursor.toArray()
-        res.send(result)
-    });
+      // GET route to retrieve all coffee
+      app.get('/coffee', async(req, res) => {
+          const cursor = coffeeCollectionPrac.find();
+          const result = await cursor.toArray();
+          res.send(result);
+      });
 
-    app.delete('/coffee/:id', async(req, res) => {
-        const id = req.params.id;
-        const query = {_id: new ObjectId(id)};
-        const result = await coffeeCollectionPrac.deleteOne(query);
-        res.send(result)
-    })
+      // GET route to retrieve a specific coffee by id
+      app.get('/coffee/:id', async(req, res) => {
+          const id = req.params.id;
+          const query = { _id: new ObjectId(id) };
+          const result = await coffeeCollectionPrac.findOne(query);
+          res.send(result);
+      });
 
-    await client.db("admin").command({ ping: 1 });
-    console.log("Pinged your deployment. You successfully connected to MongoDB!");
+      // PUT route to update a specific coffee by id
+      app.put('/coffee/:id', async(req, res) => {
+          const id = req.params.id;
+          const filter = { _id: new ObjectId(id) };
+          const options = { upsert: true };
+          
+          const updatedCoffee = {
+              $set: {
+                  name: req.body.name,
+                  type: req.body.type,
+                  origin: req.body.origin,
+                  chef: req.body.chef,
+                  price: req.body.price,
+                  imageUrl: req.body.imageUrl
+              }
+          };
+
+          const result = await coffeeCollectionPrac.updateOne(filter, updatedCoffee, options);
+          res.send(result);
+      });
+
+      // DELETE route to remove a specific coffee by id
+      app.delete('/coffee/:id', async(req, res) => {
+          const id = req.params.id;
+          const query = { _id: new ObjectId(id) };
+          const result = await coffeeCollectionPrac.deleteOne(query);
+          res.send(result);
+      });
+
+      await client.db("admin").command({ ping: 1 });
+      console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
     // await client.close();
   }
